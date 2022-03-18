@@ -102,9 +102,6 @@ def FindWord (attempted, ignoreLetters, knownLetters, lettersWithPlaces):
     for i, word in enumerate(wordList):
         ignoreWord = False
 
-        if 'saute' in word:
-            print (i, word)
-
         if len(ignoreLetters) > 0:
             for char in word:
                 if char in ignoreLetters:
@@ -114,18 +111,13 @@ def FindWord (attempted, ignoreLetters, knownLetters, lettersWithPlaces):
         if len(lettersWithPlaces) > 0:
             for char, position in lettersWithPlaces:
                 if not (word[position] == char):
-                    if 'saute' in word:
-                        print (f"char: {char} | {position} || {word}")
-                        print (f"{word[position]} || {char}")
                     ignoreWord = True
                     break
 
         if len(knownLetters) > 0:
-            for char in knownLetters:
-                if not char in word:
+            for char, position in knownLetters:
+                if not char in word or (word[position] == char):
                     ignoreWord = True
-                    if 'saute' in word:
-                        print (f"char: {char} || {word}")
                     break
         
         if ignoreWord:
@@ -166,9 +158,12 @@ if __name__ == "__main__":
     print (f'Saute: {"saute" in wordList}')
     
     while True:
-        time.sleep(5)
-
-        word = FindWord(attempted, ignoreLetters, knownLetters, lettersWithPlaces)
+        
+        if len (attempted) == 0:
+            # I like starting with the word AGILE
+            word = "agile"
+        else:
+            word = FindWord(attempted, ignoreLetters, knownLetters, lettersWithPlaces)
         
         GuessWord (driver, word)
         attempts += 1
@@ -180,8 +175,8 @@ if __name__ == "__main__":
 
         if len(yellows) > 0:
             for yellow in yellows:
-                knownLetters.append(word[yellow])
                 attempted.append(word[yellow])
+                knownLetters.append( (word[yellow], yellow) )
 
         if len(greens) > 0:
             for green in greens:
@@ -201,6 +196,7 @@ if __name__ == "__main__":
             print (f'Exit. Attempts: {attempts} || Solved: {len(greens)}')
             break
 
+        time.sleep(2)
 
 # assert "Python" in driver.title
 
