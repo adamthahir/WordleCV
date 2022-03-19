@@ -3,6 +3,8 @@ import numpy as np
 import math
 import datetime
 
+import glob
+import os
 
 class WordleAnalyzer:
 
@@ -12,7 +14,7 @@ class WordleAnalyzer:
         self.TODATE = todate
 
     def OpenFile (self):
-        self.IMAGE = cv2.imread(f"{self.TODATE}.png")
+        self.IMAGE = cv2.imread(f"./images/{self.TODATE}.png")
 
     def CropImage (self, img):
         center_x, center_y = img.shape[1] / 2, img.shape[0] / 2
@@ -91,23 +93,33 @@ class WordleAnalyzer:
         return CenterPoints
     
     def MakeBoard (self):
-        board = cv2.imread("base.png")
+        board = cv2.imread("./images/base.png")
         Cropped = self.CropImage (board)
 
-        cv2.imwrite(f"board_2.png", Cropped)
+        cv2.imwrite(f"./images/board_2.png", Cropped)
+
+    def Cleanup (self, path="./images/"):
+        files = glob.glob(f'./images/*')
+
+        for _file in files:
+            if not ".png" == _file[-4:]:
+                continue
+
+            if not f"{self.TODATE}.png" in _file:# and (not 'base' in _file and 'board' in _file):
+                os.remove(_file)
 
 
     def RunAttempt (self, initial=False):
-        Original = cv2.imread(f"{self.TODATE}.png")
+        Original = cv2.imread(f"./images/{self.TODATE}.png")
         
         if initial:
-            board = cv2.imread("board_2.png")
+            board = cv2.imread("./images/board_2.png")
         else:
-            board = cv2.imread(f"{self.TODATE}_PREV.png")
+            board = cv2.imread(f"./images/{self.TODATE}_PREV.png")
 
         Cropped = self.CropImage (Original)
 
-        print (f'Sizes: [{Cropped.shape}] | [{board.shape}] || {Original.shape}')
+        # print (f'Sizes: [{Cropped.shape}] | [{board.shape}] || {Original.shape}')
         attemptDifference = cv2.absdiff(Cropped, board)
 
         grayDifference = cv2.cvtColor(attemptDifference, cv2.COLOR_BGR2GRAY)
@@ -151,7 +163,7 @@ class WordleAnalyzer:
         # print (f"NonYellows: {CentersOfNonYellows}")      
         # print (f"NonGreens: {CentersOfNonGreens}")      
 
-        cv2.imwrite(f"{self.TODATE}_PREV.png", Cropped)
+        cv2.imwrite(f"./images/{self.TODATE}_PREV.png", Cropped)
 
         return YellowIndex, GreenIndex
 

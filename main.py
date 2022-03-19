@@ -1,7 +1,7 @@
 import datetime
 import time
 
-from WordleAnalyzer import WordleAnalyzer
+from modules.WordleAnalyzer import WordleAnalyzer
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -79,15 +79,14 @@ def GuessWord (driver, word):
     element = driver.find_elements(by=By.TAG_NAME, value="body")[0]
 
     assert len (word) == 5
-    print (word)
     element.send_keys(word)
     element.send_keys(Keys.RETURN)
 
     todate = datetime.datetime.now().date().isoformat()
 
     time.sleep(3)
-    state = driver.save_screenshot(f'{todate}.png')
-    print (f'Screenshot saved: {state}')
+    state = driver.save_screenshot(f'./images/{todate}.png')
+    # print (f'Screenshot saved: {state}')
 
 def SaveBase (driver):
     # For now, always assume word is valid.
@@ -95,8 +94,8 @@ def SaveBase (driver):
     element = driver.find_elements(by=By.TAG_NAME, value="body")[0]
 
     time.sleep(3)
-    state = driver.save_screenshot(f'base.png')
-    print (f'Base saved: {state}')
+    state = driver.save_screenshot(f'./images/base.png')
+    # print (f'Base saved: {state}')
 
 def FindWord (attempted, ignoreLetters, knownLetters, lettersWithPlaces):
     for i, word in enumerate(wordList):
@@ -139,7 +138,7 @@ if __name__ == "__main__":
     OpenLinkNewTab(driver, scriptLink)
 
     wordList = ExtractWordList (driver)
-    print (f'length: {len(wordList)}')
+    # print (f'length: {len(wordList)}')
 
     SaveBase(driver)
 
@@ -154,8 +153,6 @@ if __name__ == "__main__":
     ignoreLetters = []
     knownLetters = []
     lettersWithPlaces = []
-
-    print (f'Saute: {"saute" in wordList}')
     
     while True:
         
@@ -169,6 +166,11 @@ if __name__ == "__main__":
         attempts += 1
 
         yellows, greens = analyzer.RunAttempt(attempts==1)
+
+        if attempts >= 6 or len(greens) >= 5:
+            analyzer.Cleanup()
+            print (f'\nExit. Attempts: {attempts-1} || Solved: {len(greens) == 5}')
+            break
 
         yellowLetters = [word[i] for i in yellows]
         greenLetters = [word[i] for i in greens]
@@ -187,14 +189,11 @@ if __name__ == "__main__":
             if not char in yellowLetters and not char in greenLetters:
                 ignoreLetters.append(word[i])
 
-        print (f'Word: {word}')
+        print (f'\nWord: {word}')
         print (f'Yellows: {yellows}')
         print (f'Greens: {greens}')
         print (f'ignore: {ignoreLetters}')
 
-        if attempts >= 6 or len(greens) >= 5:
-            print (f'Exit. Attempts: {attempts} || Solved: {len(greens)}')
-            break
 
         time.sleep(2)
 
