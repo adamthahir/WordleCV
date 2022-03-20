@@ -1,6 +1,9 @@
 import datetime
 import time
 
+import os
+import json
+
 from modules.WordleAnalyzer import WordleAnalyzer
 
 from selenium import webdriver
@@ -12,11 +15,11 @@ def GetShadowRootObject (driver, tagname):
     query = f"return document.getElementsByTagName ('{tagname}')[0].shadowRoot"
     return driver.execute_script (query)
 
-def FindScriptFile (driver):
+def FindScriptFile (driver, jsHeader='/games/wordle/main'):
     page = driver.find_elements(By.TAG_NAME, 'script')
     for element in page:
         link = str(element.get_attribute('src'))
-        if '/games/wordle/main' in link and '.js' == link[-3:]:
+        if jsHeader in link and '.js' == link[-3:]:
             return link
 
 def GotoTab (driver, tabIndex):
@@ -125,16 +128,31 @@ def FindWord (attempted, ignoreLetters, knownLetters, lettersWithPlaces):
         return word
 
 if __name__ == "__main__":
-    binary = FirefoxBinary('C:\\Users\\adamthahir\\Documents\\geckodriver.exe')
-    driver = webdriver.Firefox(executable_path='C:\\Users\\adamthahir\\Documents\\geckodriver.exe')
+    binaryPath = 'C:\\Users\\adamthahir\\Documents\\geckodriver.exe'
+    driverPath = 'C:\\Users\\adamthahir\\Documents\\geckodriver.exe'
 
     site = 'https://www.nytimes.com/games/wordle/index.html'
+    jsHeader = '/games/wordle/main'
+
+    if os.path.exists("config.json"):
+        with open ("config.json") as f:
+            data = json.load(f)
+
+            binaryPath = data['binary'] if 'binary' in data.keys() else binaryPath
+            driverPath = data['driver'] if 'driver' in data.keys() else driverPath
+
+            site = data['site'] if 'site' in data.keys() else site
+            jsHeader = data['jsHeader'] if 'jsHeader' in data.keys() else jsHeader
+
+    binary = FirefoxBinary(binaryPath)
+    driver = webdriver.Firefox(executable_path=driverPath)
+
     driver.get(site)
     time.sleep(2)
 
     driver.find_elements(by=By.TAG_NAME, value="body")[0].click()
 
-    scriptLink = FindScriptFile(driver)
+    scriptLink = FindScriptFile(driver, jsHeader)
     OpenLinkNewTab(driver, scriptLink)
 
     wordList = ExtractWordList (driver)
@@ -162,12 +180,13 @@ if __name__ == "__main__":
         else:
             word = FindWord(attempted, ignoreLetters, knownLetters, lettersWithPlaces)
         
-        GuessWord (driver, word)
-        attempts += 1
+        if not word == None:
+            GuessWord (driver, word)
+            attempts += 1
 
-        yellows, greens = analyzer.RunAttempt(attempts==1)
+            yellows, greens = analyzer.RunAttempt(attempts==1)
 
-        if attempts >= 6 or len(greens) >= 5:
+        if attempts >= 6 or len(greens) >= 5 or word == None:
             analyzer.Cleanup()
             print (f'\nExit. Attempts: {attempts-1} || Solved: {len(greens) == 5}')
             break
@@ -195,13 +214,4 @@ if __name__ == "__main__":
         print (f'ignore: {ignoreLetters}')
 
 
-        time.sleep(2)
-
-# assert "Python" in driver.title
-
-# elem = driver.find_element_by_name("q")
-# elem.clear()
-# elem.send_keys("pycon")
-# elem.send_keys(Keys.RETURN)
-# assert "No results found." not in driver.page_source
-# driver.close()
+        time.sleep(2.5)
