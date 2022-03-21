@@ -109,7 +109,7 @@ class WordleAnalyzer:
                 os.remove(_file)
 
 
-    def RunAttempt (self, initial=False):
+    def RunAttempt (self, initial=False, checkWin=False):
         Original = cv2.imread(f"./images/{self.TODATE}.png")
         
         if initial:
@@ -131,7 +131,9 @@ class WordleAnalyzer:
 
         CentersOfAll = self.FindCenters(binaryDifference)
 
-        assert len(CentersOfAll) != 0, 'No centers found; to start from.'
+        # assert len(CentersOfAll) != 0, 'No centers found; to start from.'
+        if len (CentersOfAll) == 0:
+            return None, None
 
         NonYellows  = cv2.absdiff(binaryDifference, YellowMask)
         NonGreens   = cv2.absdiff(binaryDifference, GreenMask)
@@ -158,10 +160,13 @@ class WordleAnalyzer:
 
         # print (f"Yellows: {YellowIndex}")      
         # print (f"Greens: {GreenIndex}")    
-          
+        
         # print (f"All: {CentersOfAll}")      
         # print (f"NonYellows: {CentersOfNonYellows}")      
         # print (f"NonGreens: {CentersOfNonGreens}")      
+        if checkWin:
+            gameState = 'Maybe?'
+            return gameState, gameState
 
         cv2.imwrite(f"./images/{self.TODATE}_PREV.png", Cropped)
 

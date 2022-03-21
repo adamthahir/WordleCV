@@ -172,6 +172,7 @@ if __name__ == "__main__":
     knownLetters = []
     lettersWithPlaces = []
     
+    gameWon = None
     while True:
         
         if len (attempted) == 0:
@@ -184,11 +185,20 @@ if __name__ == "__main__":
             GuessWord (driver, word)
             attempts += 1
 
-            yellows, greens = analyzer.RunAttempt(attempts==1)
+        yellows, greens = analyzer.RunAttempt(attempts==1, checkWin=word==None)
 
-        if attempts >= 6 or len(greens) >= 5 or word == None:
+        if yellows == None or greens == None:
+            todate = datetime.datetime.now().date().isoformat()
+            driver.save_screenshot(f'./images/{todate}.png')
+            yellows, greens = analyzer.RunAttempt(attempts==1, checkWin=word==None)
+
+        if type (yellows) != list or type(greens) != list:
+            gameWon = yellows
+
+        if attempts >= 6 or len(greens) >= 5 or not gameWon == None:
             analyzer.Cleanup()
-            print (f'\nExit. Attempts: {attempts-1} || Solved: {len(greens) == 5}')
+            state = gameWon if not gameWon == None else len(greens) >= 5
+            print (f'\nExit. Attempts: {attempts-1} || Solved: {state}')
             break
 
         yellowLetters = [word[i] for i in yellows]
@@ -205,7 +215,7 @@ if __name__ == "__main__":
                 lettersWithPlaces.append( (word[green], green) )
 
         for i, char in enumerate(word):
-            if not char in yellowLetters and not char in greenLetters:
+            if not char in yellowLetters and not char in greenLetters and not char in attempted:
                 ignoreLetters.append(word[i])
 
         print (f'\nWord: {word}')
@@ -214,4 +224,4 @@ if __name__ == "__main__":
         print (f'ignore: {ignoreLetters}')
 
 
-        time.sleep(2.5)
+        time.sleep(3)
