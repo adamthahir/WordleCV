@@ -156,7 +156,7 @@ if __name__ == "__main__":
     OpenLinkNewTab(driver, scriptLink)
 
     wordList = ExtractWordList (driver)
-    # print (f'length: {len(wordList)}')
+    print (f'Number of words find: {len(wordList)}')
 
     SaveBase(driver)
 
@@ -216,6 +216,7 @@ if __name__ == "__main__":
 
         for i, char in enumerate(word):
             if not char in yellowLetters and not char in greenLetters and not char in attempted:
+                attempted.append(word[i])
                 ignoreLetters.append(word[i])
 
         print (f'\nWord: {word}')
