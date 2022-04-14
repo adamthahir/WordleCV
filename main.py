@@ -51,7 +51,7 @@ def ExtractWordList (driver):
     wordLists = []
 
     # Get List A
-    startIndex = fileContent.find("var Ma=")
+    startIndex = fileContent.find("var mo=")
     subContent = fileContent[startIndex:]
 
     # print (subContent)
